@@ -1,0 +1,257 @@
+{
+  "name": "Campus Navigator – AI Campus Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hi! I'm Campus Navigator. Ask me about buildings, library hours, labs, departments, offices, hostels, medical help or campus contacts.",
+        "options": {
+          "inputPlaceholder": "Ask about locations, timings, contacts...",
+          "loadPreviousSession": "notSupported",
+          "subtitle": "Your campus information assistant",
+          "title": "Campus Navigator",
+          "responseMode": "lastNode"
+        }
+      },
+      "id": "3fd42366-d4e9-4f29-abdf-8c2136ef4110",
+      "name": "Student Chat",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        112
+      ],
+      "webhookId": "59749516-931a-4c18-ada8-a66d5ac344ee"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are Campus Navigator, a friendly and professional campus information assistant for SRM University-AP (Andhra Pradesh) students, new students and visitors.\n\nKNOWLEDGE SOURCE\n- Your ONLY source of campus facts is the Campus Knowledge Base, reached through the tools search_campus_info (keyword search) and list_campus_info (all entries).\n- ALWAYS call a tool before answering a campus question. For broad questions (facilities, labs, departments, contacts) use list_campus_info. If a keyword search returns nothing, try another keyword or list_campus_info.\n- Rows have: category (e.g. Academic buildings, Departments, Library, Laboratories, Administrative offices, Hostels, Mess and dining, Medical facilities, Sports facilities, Student support services, Important contacts, FAQs), title, keywords, location, timings, contact, details.\n- A field that is empty or says \"Unavailable\" means the information is NOT known. Never fill it in from your own knowledge.\n- If a question has several parts (for example library location and closing time), answer the parts you know and clearly say which part is unavailable.\n- Understand different phrasings: \"when does the library shut\" and \"library closing time\" mean the same thing.\n\nSTRICT RULES\n- Use only facts returned by the tools. Never invent or guess locations, timings, names, phone numbers or emails.\n- If the information is missing, say: \"I don't have that information yet.\" Then suggest contacting the relevant office (for example the Administrative Office or the Help Desk) using contact details from the knowledge base if present. If no contact is known, tell the student to ask at the main administrative office.\n- When you share a phone number or email, copy it exactly as stored.\n- Do not answer questions unrelated to the campus; politely say you can only help with campus information.\n\nSTYLE\n- Simple English, friendly, direct. Lead with the answer.\n- Give the location or directions when available, and opening hours when relevant.\n- Keep answers short (1-4 sentences, or a brief list when giving several items). No long explanations.",
+          "maxIterations": 6,
+          "enableStreaming": false
+        }
+      },
+      "id": "226ce9e1-18f2-4add-876d-9f31d966636c",
+      "name": "Campus Navigator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        352,
+        112
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5.4-mini",
+          "cachedResultName": "gpt-5.4-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "745f3cf3-532f-4a0a-b28b-4f41236e6444",
+      "name": "Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        336
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "Gateway credits",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 6
+      },
+      "id": "75777a25-e17c-4dd6-ade4-9d5a959736cd",
+      "name": "Conversation Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        352,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "CU0hAUS14wxp4T06",
+          "cachedResultName": "campus_knowledge_base"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "keywords",
+              "condition": "ilike",
+              "keyValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('keyword', 'One short search keyword from the question') }}"
+            },
+            {
+              "keyName": "title",
+              "condition": "ilike",
+              "keyValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('keyword', 'One short search keyword from the question') }}"
+            },
+            {
+              "keyName": "category",
+              "condition": "ilike",
+              "keyValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('keyword', 'One short search keyword from the question') }}"
+            },
+            {
+              "keyName": "details",
+              "condition": "ilike",
+              "keyValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('keyword', 'One short search keyword from the question') }}"
+            }
+          ]
+        },
+        "limit": 10
+      },
+      "id": "ddf72895-5a84-42dc-9ff6-eb0d50036804",
+      "name": "search_campus_info",
+      "type": "n8n-nodes-base.dataTableTool",
+      "typeVersion": 1.1,
+      "position": [
+        544,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "CU0hAUS14wxp4T06",
+          "cachedResultName": "campus_knowledge_base"
+        },
+        "limit": 100
+      },
+      "id": "18b13a92-9153-406c-a1ec-296b46f1f55e",
+      "name": "list_campus_info",
+      "type": "n8n-nodes-base.dataTableTool",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fallback-output",
+              "name": "output",
+              "type": "string",
+              "value": "Sorry, I'm having trouble right now. Please try again in a moment, or contact the campus administrative office or help desk for urgent help."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ec516eb0-555c-4633-83f9-757b92765a34",
+      "name": "Fallback Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        816,
+        112
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Student Chat": {
+      "main": [
+        [
+          {
+            "node": "Campus Navigator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Campus Navigator": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Fallback Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Campus Navigator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Campus Navigator",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search_campus_info": {
+      "ai_tool": [
+        [
+          {
+            "node": "Campus Navigator",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "list_campus_info": {
+      "ai_tool": [
+        [
+          {
+            "node": "Campus Navigator",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "e2272653-6deb-4b99-803d-25bb02ee5546",
+  "meta": {
+    "instanceId": "32dfc013cc26a371b4f381ad2618396666587a1342c9834c9ec8abee59321557"
+  },
+  "nodeGroups": [],
+  "id": "AvCpAOOW4x8aFNvu",
+  "tags": []
+}
